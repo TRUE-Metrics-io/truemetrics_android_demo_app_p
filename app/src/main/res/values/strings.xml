@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Truemetrics Demo App</string>
+    <string name="label_start_time">Start Time</string>
+    <string name="label_current_time">Current Time</string>
+    <string name="notification_channel_foreground_service">Foreground service</string>
+    <string name="notification_foreground_service">Truemetrics SDK foreground service</string>
+    <string name="toast_notifications_permission_needed">Post notifications permission is needed</string>
+    <string name="error_dialog_title">Error</string>
+    <string name="error_dialog_ok">OK</string>
+</resources>
