@@ -8,7 +8,34 @@ Project requires Java 17. If necessary, adjust Java version in IDE's `File` -> `
 
 TODO: Add info how to get an API KEY
 
+## Truemetrics SDK
+
+TODO: Add info how to obtain zip file containing the SDK 
+
 ### Usage
+
+#### Configure project local maven repo
+
+Update your project-level `settings.gradle` file and `dependencyResolutionManagement` section:
+
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        // other repositories
+        maven {
+            name = 'local'
+            url = "repo"
+        }
+    }
+}
+```
+
+Create a `repo` folder in project's root, copy `truemetricssdk.zip` into it and extract it, `repo` should look like this:
+
+```
+repo/io/truemetrics/truemetricssdk/...
+```
 
 #### Declare dependency on TruemetricsSDK
 
