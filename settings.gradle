@@ -13,8 +13,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            name = 'local'
-            url = "repo"
+            name = 'truemetrics SDK'
+            url = "https://github.com/TRUE-Metrics-io/truemetrics_android_SDK_p_maven/raw/main"
         }
     }
 }
