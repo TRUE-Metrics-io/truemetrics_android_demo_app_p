@@ -24,17 +24,11 @@ dependencyResolutionManagement {
     repositories {
         // other repositories
         maven {
-            name = 'local'
-            url = "repo"
+            name = 'truemetrics SDK'
+            url = "https://github.com/TRUE-Metrics-io/truemetrics_android_SDK_p_maven/raw/main"
         }
     }
 }
-```
-
-Create a `repo` folder in project's root, copy `truemetricssdk.zip` into it and extract it, `repo` should look like this:
-
-```
-repo/io/truemetrics/truemetricssdk/...
 ```
 
 #### Declare dependency on TruemetricsSDK
