@@ -43,6 +43,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    implementation 'io.truemetrics:truemetricssdk:0.0.1'
+    implementation 'io.truemetrics:truemetricssdk:0.0.2'
 
 }

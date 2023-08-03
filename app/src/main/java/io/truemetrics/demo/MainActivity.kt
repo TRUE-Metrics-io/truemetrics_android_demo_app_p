@@ -1,8 +1,5 @@
 package io.truemetrics.demo
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
@@ -11,7 +8,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import io.truemetrics.truemetricssdk.ErrorCode
 import io.truemetrics.truemetricssdk.StatusListener
 import io.truemetrics.truemetricssdk.TruemetricsSDK
@@ -76,14 +72,7 @@ class MainActivity : AppCompatActivity() {
             if(TruemetricsSDK.isRecordingInProgress()) {
                 TruemetricsSDK.stopRecording()
             } else {
-
-                if(hasNotificationsPermission()){
-                    startRecording()
-                } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
+                startRecording()
             }
         }
 
@@ -92,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 
             TruemetricsSDK.initialize(
                 this, Config(
-                    apiKey = "",
+                    apiKey = "YOUR_API_KEY",
                     foregroundNotification = notification
                 )
             )
@@ -112,17 +101,6 @@ class MainActivity : AppCompatActivity() {
     private fun startRecording(){
         NotificationsHelper(this).createNotificationChannels()
         TruemetricsSDK.startRecording()
-    }
-
-    private fun hasNotificationsPermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-
-        return true
     }
 
     private fun showErrorDialog(errorCode: ErrorCode, message: String?) {
