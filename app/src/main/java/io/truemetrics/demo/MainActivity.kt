@@ -1,47 +1,77 @@
 package io.truemetrics.demo
 
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
+import io.truemetrics.demo.databinding.ActivityMainBinding
 import io.truemetrics.truemetricssdk.ErrorCode
 import io.truemetrics.truemetricssdk.StatusListener
 import io.truemetrics.truemetricssdk.TruemetricsSDK
 import io.truemetrics.truemetricssdk.config.Config
 import io.truemetrics.truemetricssdk.engine.state.State
-import java.util.Date
+import io.truemetrics.truemetricssdk.logger.Logger
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        private const val PREFS_FILE = "Prefs"
+        private const val API_KEY = "apiKey"
     }
 
-    private val actionButton by lazy { findViewById<ImageView>(R.id.action_button) }
-    private val statusLabel by lazy { findViewById<TextView>(R.id.status) }
-    private val timeLabel by lazy { findViewById<TextView>(R.id.time_label) }
-    private val time by lazy { findViewById<TextView>(R.id.time) }
+    private lateinit var binding: ActivityMainBinding
 
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private val viewModel: MainViewModel by viewModels()
+    private val prefs: SharedPreferences by lazy {
+        this.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+    }
+
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        Logger.d(TAG, "locationPermissionRequest $permissions")
+        when {
+            permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                checkApiKeyAndInitSdk()
+            }
+
+            permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                checkApiKeyAndInitSdk()
+            }
+
+            else -> {
+                Logger.d(TAG, "locationPermissionRequest denied")
+                checkApiKeyAndInitSdk()
+            }
+        }
+    }
 
     private val statusListener = object : StatusListener{
         override fun onStateChange(state: State) {
-            statusLabel.text = "SDK Status: $state"
+            binding.status.text = "SDK Status: $state"
 
             when(state) {
+                State.INITIALIZED -> {
+                    TruemetricsSDK.startRecording()
+                }
                 State.RECORDING_IN_PROGRESS -> {
-                    actionButton.setImageResource(R.drawable.ic_button_stop)
-                    timeLabel.setText(R.string.label_start_time)
-                    time.text = TruemetricsSDK.getRecordingStartTime().toString()
+                    binding.startTimeLabel.setText(R.string.label_start_time)
+                    binding.startTime.text = TruemetricsSDK.getRecordingStartTime().toString()
                 }
                 else -> {
-                    actionButton.setImageResource(R.drawable.ic_button_start)
-                    timeLabel.setText(R.string.label_current_time)
-                    time.text = Date().toString()
+                    binding.startTimeLabel.text = ""
+                    binding.startTime.text = ""
                 }
             }
         }
@@ -54,37 +84,54 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
+        setContentView(binding.root)
 
-        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            if (it) {
-                startRecording()
+        binding.moreMenu.setOnClickListener {
+            val menu = PopupMenu(this, binding.moreMenu)
+
+            if (TruemetricsSDK.isRecordingInProgress()) {
+                menu.menu.add(0, 0, 0, "Stop recording")
             } else {
-                Toast.makeText(
-                    this,
-                    R.string.toast_notifications_permission_needed,
-                    Toast.LENGTH_SHORT
-                ).show()
+                menu.menu.add(0, 0, 0, "Start recording")
             }
+
+            menu.menu.add(0, 1, 1, "Debug Log")
+            menu.menu.add(0, 2, 2, "Active Configuration")
+            menu.menu.add(0, 3, 3, "Log metadata")
+            menu.setOnMenuItemClickListener {
+                when(it.itemId) {
+                    0 -> {
+                        if(TruemetricsSDK.isRecordingInProgress()) {
+                            TruemetricsSDK.stopRecording()
+                        } else {
+                            startRecording()
+                        }
+                    }
+                    1 -> startActivity(Intent(this, DebugActivity::class.java))
+                    2 -> startActivity(Intent(this, ConfigActivity::class.java))
+                    3 -> showAddMetadataDialog()
+                }
+                true
+            }
+            menu.show()
         }
 
-        actionButton.setOnClickListener {
-            if(TruemetricsSDK.isRecordingInProgress()) {
-                TruemetricsSDK.stopRecording()
-            } else {
-                startRecording()
-            }
+        viewModel.time.observe(this) {
+            binding.currentTime.text = it
         }
 
-        if(!TruemetricsSDK.isInitialized()) {
-            val notification = NotificationsHelper(this).createForegroundServiceNotification()
+        checkLocationPermissions()
+    }
 
-            TruemetricsSDK.initialize(
-                this, Config(
-                    apiKey = "YOUR_API_KEY",
-                    foregroundNotification = notification
-                )
-            )
+    private fun checkApiKeyAndInitSdk(){
+        Logger.d(TAG, "checkApiKeyAndInitSdk")
+
+        val apiKey = prefs.getString(API_KEY, "")
+        if(apiKey!!.isNotEmpty()) {
+            initSdk(apiKey)
+        } else {
+            showApiKeyDialog()
         }
     }
 
@@ -99,7 +146,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startRecording(){
-        NotificationsHelper(this).createNotificationChannels()
         TruemetricsSDK.startRecording()
     }
 
@@ -109,5 +155,105 @@ class MainActivity : AppCompatActivity() {
             .setMessage("error code: ${errorCode.name}, message: $message")
             .setNeutralButton(R.string.error_dialog_ok, null)
             .show()
+    }
+
+    private fun checkLocationPermissions() {
+        Logger.d(TAG, "checkLocationPermissions")
+        val hasFineLocationPermission = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if(!hasFineLocationPermission) {
+            locationPermissionRequest.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else {
+            checkApiKeyAndInitSdk()
+        }
+    }
+
+    private fun showApiKeyDialog(){
+        val alertDialog = AlertDialog.Builder(this)
+            .setCancelable(false)
+            .create()
+
+        val dialogView: View = LayoutInflater.from(this).inflate(R.layout.dialog_api_key, null)
+
+        val editText = dialogView.findViewById<EditText>(R.id.api_key)
+
+        dialogView.findViewById<View>(R.id.cancel_button)
+            .setOnClickListener { _: View? ->
+                alertDialog.cancel()
+                finish()
+            }
+
+        dialogView.findViewById<View>(R.id.save_button).setOnClickListener { _: View? ->
+            alertDialog.cancel()
+
+            val apiKey = editText.text.toString()
+
+            if(apiKey.isEmpty()){
+                finish()
+            } else {
+                prefs.edit().putString(API_KEY, apiKey).apply()
+                initSdk(editText.text.toString())
+            }
+        }
+
+        alertDialog.setView(dialogView)
+        alertDialog.show()
+    }
+
+    private fun showAddMetadataDialog(){
+        val alertDialog = AlertDialog.Builder(this)
+            .create()
+
+        val dialogView: View = LayoutInflater.from(this).inflate(R.layout.dialog_add_metadata, null)
+
+        val metadataKey = dialogView.findViewById<EditText>(R.id.metadata_key)
+        val metadataValue = dialogView.findViewById<EditText>(R.id.metadata_value)
+
+        dialogView.findViewById<View>(R.id.cancel_button)
+            .setOnClickListener { _: View? ->
+                alertDialog.cancel()
+            }
+
+        dialogView.findViewById<View>(R.id.add_button).setOnClickListener { _: View? ->
+
+            val key = metadataKey.text.toString()
+            val value = metadataValue.text.toString()
+
+            if(key.isNotEmpty() && value.isNotEmpty()){
+                TruemetricsSDK.logMetadata(mapOf(key to value))
+                alertDialog.cancel()
+            }
+        }
+
+        alertDialog.setView(dialogView)
+        alertDialog.show()
+    }
+
+    private fun initSdk(apiKey: String){
+
+        if(TruemetricsSDK.isInitialized()) {
+            return
+        }
+
+        NotificationsHelper(this).createNotificationChannels()
+        val notification = NotificationsHelper(this).createForegroundServiceNotification()
+
+        val deviceId = TruemetricsSDK.initialize(
+            this, Config(
+                apiKey = apiKey,
+                foregroundNotification = notification,
+                debug = true
+            )
+        )
+
+        binding.deviceId.text = deviceId
     }
 }

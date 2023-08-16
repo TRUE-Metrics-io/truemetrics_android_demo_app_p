@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="@string/activity_label_debug_log"
+            app:navigationIcon="@drawable/ic_arrow_back_24dp"
+            app:navigationIconTint="@color/white"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/sensor_accelerometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Accelerometer: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_magnetometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Magnetometer: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_barometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Barometer: ON"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/sensor_gyroscope"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Gyroscope: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Location: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_gnss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="GNSS: ON"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/recordings_in_db"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="10dp"
+        tools:text="Recordings in DB: "/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/white"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+        <ImageView
+            android:id="@+id/scroll_to_bottom"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_to_bottom_24dp"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+
+    </FrameLayout>
+
+</LinearLayout>

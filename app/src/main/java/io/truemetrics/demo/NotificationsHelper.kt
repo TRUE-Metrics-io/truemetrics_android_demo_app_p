@@ -15,7 +15,6 @@ class NotificationsHelper(private val context: Context) {
     private val notificationManager = NotificationManagerCompat.from(context)
 
     fun createNotificationChannels(){
-
         notificationManager.createNotificationChannel(
             NotificationChannelCompat.Builder(FOREGROUND_SERVICE_CHANNEL, NotificationManagerCompat.IMPORTANCE_LOW)
                 .setName(context.getString(R.string.notification_channel_foreground_service))

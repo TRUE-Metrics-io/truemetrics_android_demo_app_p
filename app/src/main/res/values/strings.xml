@@ -7,4 +7,15 @@
     <string name="toast_notifications_permission_needed">Post notifications permission is needed</string>
     <string name="error_dialog_title">Error</string>
     <string name="error_dialog_ok">OK</string>
+    <string name="toast_location_permission_no_granted">Location permission not granted</string>
+    <string name="activity_label_config">Configuration</string>
+    <string name="menu_debug_view">Debug Log</string>
+    <string name="menu_configuration">Active configuration</string>
+    <string name="activity_label_debug_log">Debug Log</string>
+    <string name="enter_api_key">Enter API key:</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_save">Save</string>
+    <string name="button_add">Add</string>
+    <string name="hint_metadata_key">Metadata Key</string>
+    <string name="hint_metadata_value">Metadata Value</string>
 </resources>
