@@ -186,12 +186,12 @@ class MainActivity : AppCompatActivity() {
         val editText = dialogView.findViewById<EditText>(R.id.api_key)
 
         dialogView.findViewById<View>(R.id.cancel_button)
-            .setOnClickListener { _: View? ->
+            .setOnClickListener {
                 alertDialog.cancel()
                 finish()
             }
 
-        dialogView.findViewById<View>(R.id.save_button).setOnClickListener { _: View? ->
+        dialogView.findViewById<View>(R.id.save_button).setOnClickListener {
             alertDialog.cancel()
 
             val apiKey = editText.text.toString()
@@ -218,11 +218,11 @@ class MainActivity : AppCompatActivity() {
         val metadataValue = dialogView.findViewById<EditText>(R.id.metadata_value)
 
         dialogView.findViewById<View>(R.id.cancel_button)
-            .setOnClickListener { _: View? ->
+            .setOnClickListener {
                 alertDialog.cancel()
             }
 
-        dialogView.findViewById<View>(R.id.add_button).setOnClickListener { _: View? ->
+        dialogView.findViewById<View>(R.id.add_button).setOnClickListener {
 
             val key = metadataKey.text.toString()
             val value = metadataValue.text.toString()
