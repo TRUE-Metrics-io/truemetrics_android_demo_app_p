@@ -4,12 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -28,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "MainActivity"
         private const val PREFS_FILE = "Prefs"
         private const val API_KEY = "apiKey"
+        private const val BACKGROUND_LOCATION_REQUEST_CODE = 1
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -44,10 +47,16 @@ class MainActivity : AppCompatActivity() {
         when {
             permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
                 checkApiKeyAndInitSdk()
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    requestBackgroundLocationPermission()
+                }
             }
 
             permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
                 checkApiKeyAndInitSdk()
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    requestBackgroundLocationPermission()
+                }
             }
 
             else -> {
@@ -164,13 +173,37 @@ class MainActivity : AppCompatActivity() {
             android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
-        if(!hasFineLocationPermission) {
-            locationPermissionRequest.launch(
-                arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+        val hasBackgroundLocationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
+        val permissions = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
             )
+        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
+        } else {
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        }
+
+        Logger.d(TAG, "hasFineLocationPermission=$hasFineLocationPermission hasBackgroundLocationPermission=$hasBackgroundLocationPermission")
+
+        if(!hasFineLocationPermission || !hasBackgroundLocationPermission) {
+            locationPermissionRequest.launch(permissions)
         } else {
             checkApiKeyAndInitSdk()
         }
@@ -218,12 +251,11 @@ class MainActivity : AppCompatActivity() {
         val metadataValue = dialogView.findViewById<EditText>(R.id.metadata_value)
 
         dialogView.findViewById<View>(R.id.cancel_button)
-            .setOnClickListener {
+            .setOnClickListener { _: View? ->
                 alertDialog.cancel()
             }
 
         dialogView.findViewById<View>(R.id.add_button).setOnClickListener {
-
             val key = metadataKey.text.toString()
             val value = metadataValue.text.toString()
 
@@ -255,5 +287,23 @@ class MainActivity : AppCompatActivity() {
         )
 
         binding.deviceId.text = deviceId
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestBackgroundLocationPermission(){
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_title_background_location_permission)
+            .setMessage(R.string.dialog_message_background_location_permission)
+            .setPositiveButton(R.string.dialog_settings) { _, _ ->
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    BACKGROUND_LOCATION_REQUEST_CODE
+                )
+            }
+            .setNegativeButton(R.string.dialog_cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
     }
 }

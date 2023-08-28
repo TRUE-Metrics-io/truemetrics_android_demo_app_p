@@ -18,4 +18,8 @@
     <string name="button_add">Add</string>
     <string name="hint_metadata_key">Metadata Key</string>
     <string name="hint_metadata_value">Metadata Value</string>
+    <string name="dialog_title_background_location_permission">Background location</string>
+    <string name="dialog_message_background_location_permission">Application needs permission to access background location to work reliably when in background. Select "Allow all the time" on the settings screen.</string>
+    <string name="dialog_settings">Open settings</string>
+    <string name="dialog_cancel">Cancel</string>
 </resources>
