@@ -1,21 +1,19 @@
 package io.truemetrics.demo
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.content.ContextCompat
 import io.truemetrics.demo.databinding.ActivityMainBinding
 import io.truemetrics.truemetricssdk.ErrorCode
 import io.truemetrics.truemetricssdk.StatusListener
@@ -40,28 +38,27 @@ class MainActivity : AppCompatActivity() {
         this.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
     }
 
-    private val locationPermissionRequest = registerForActivityResult(
+    private var askBackgroundLocationPermission: Boolean = false
+
+    private val permissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         Logger.d(TAG, "locationPermissionRequest $permissions")
         when {
             permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                checkApiKeyAndInitSdk()
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if(askBackgroundLocationPermission) {
                     requestBackgroundLocationPermission()
                 }
             }
 
             permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                checkApiKeyAndInitSdk()
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if(askBackgroundLocationPermission) {
                     requestBackgroundLocationPermission()
                 }
             }
 
             else -> {
                 Logger.d(TAG, "locationPermissionRequest denied")
-                checkApiKeyAndInitSdk()
             }
         }
     }
@@ -87,6 +84,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun onError(errorCode: ErrorCode, message: String?) {
             showErrorDialog(errorCode, message)
+        }
+
+        @SuppressLint("InlinedApi")
+        override fun askPermissions(permissions: List<String>) {
+            Log.d(TAG, "askPermissions: $permissions")
+            askBackgroundLocationPermission = permissions.contains(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            val filteredPermissions = permissions.toMutableList()
+            // ACCESS_BACKGROUND_LOCATION needs to be requested separately so we are removing it from the list
+            filteredPermissions.remove(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            permissionRequest.launch(filteredPermissions.toTypedArray())
         }
     }
 
@@ -130,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             binding.currentTime.text = it
         }
 
-        checkLocationPermissions()
+        checkApiKeyAndInitSdk()
     }
 
     private fun checkApiKeyAndInitSdk(){
@@ -164,49 +171,6 @@ class MainActivity : AppCompatActivity() {
             .setMessage("error code: ${errorCode.name}, message: $message")
             .setNeutralButton(R.string.error_dialog_ok, null)
             .show()
-    }
-
-    private fun checkLocationPermissions() {
-        Logger.d(TAG, "checkLocationPermissions")
-        val hasFineLocationPermission = ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val hasBackgroundLocationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-
-        val permissions = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        } else {
-            arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        }
-
-        Logger.d(TAG, "hasFineLocationPermission=$hasFineLocationPermission hasBackgroundLocationPermission=$hasBackgroundLocationPermission")
-
-        if(!hasFineLocationPermission || !hasBackgroundLocationPermission) {
-            locationPermissionRequest.launch(permissions)
-        } else {
-            checkApiKeyAndInitSdk()
-        }
     }
 
     private fun showApiKeyDialog(){
@@ -289,7 +253,7 @@ class MainActivity : AppCompatActivity() {
         binding.deviceId.text = deviceId
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
+    @SuppressLint("InlinedApi")
     private fun requestBackgroundLocationPermission(){
         AlertDialog.Builder(this)
             .setTitle(R.string.dialog_title_background_location_permission)
