@@ -22,4 +22,7 @@
     <string name="dialog_message_background_location_permission">Application needs permission to access background location to work reliably when in background. Select "Allow all the time" on the settings screen.</string>
     <string name="dialog_settings">Open settings</string>
     <string name="dialog_cancel">Cancel</string>
+    <string name="activity_label_log_metadata">Log Metadata</string>
+    <string name="button_add_fields">Add more fields</string>
+    <string name="button_log_metadata">Log metadata</string>
 </resources>

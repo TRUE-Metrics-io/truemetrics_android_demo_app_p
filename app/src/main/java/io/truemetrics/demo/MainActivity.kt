@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     1 -> startActivity(Intent(this, DebugActivity::class.java))
                     2 -> startActivity(Intent(this, ConfigActivity::class.java))
-                    3 -> showAddMetadataDialog()
+                    3 -> startActivity(Intent(this, LogMetadataActivity::class.java))
                 }
                 true
             }
@@ -198,34 +198,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 prefs.edit().putString(API_KEY, apiKey).apply()
                 initSdk(editText.text.toString())
-            }
-        }
-
-        alertDialog.setView(dialogView)
-        alertDialog.show()
-    }
-
-    private fun showAddMetadataDialog(){
-        val alertDialog = AlertDialog.Builder(this)
-            .create()
-
-        val dialogView: View = LayoutInflater.from(this).inflate(R.layout.dialog_add_metadata, null)
-
-        val metadataKey = dialogView.findViewById<EditText>(R.id.metadata_key)
-        val metadataValue = dialogView.findViewById<EditText>(R.id.metadata_value)
-
-        dialogView.findViewById<View>(R.id.cancel_button)
-            .setOnClickListener { _: View? ->
-                alertDialog.cancel()
-            }
-
-        dialogView.findViewById<View>(R.id.add_button).setOnClickListener {
-            val key = metadataKey.text.toString()
-            val value = metadataValue.text.toString()
-
-            if(key.isNotEmpty() && value.isNotEmpty()){
-                TruemetricsSDK.logMetadata(mapOf(key to value))
-                alertDialog.cancel()
             }
         }
 

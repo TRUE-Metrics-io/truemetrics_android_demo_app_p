@@ -3,9 +3,13 @@ package io.truemetrics.demo
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
@@ -14,6 +18,8 @@ import io.truemetrics.demo.databinding.ActivityDebugBinding
 import io.truemetrics.truemetricssdk.TruemetricsSDK
 import io.truemetrics.truemetricssdk.engine.sensor.model.SensorName
 import io.truemetrics.truemetricssdk.engine.sensor.model.SensorStatus
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class DebugActivity : AppCompatActivity() {
 
@@ -59,100 +65,51 @@ class DebugActivity : AppCompatActivity() {
         })
 
         viewModel.recordingsCount.observe(this) {
-            binding.recordingsInDb.text = "Recordings in DB: $it"
+            binding.recordingsInDb.text = "DB rows: $it"
         }
 
         viewModel.logMessages.observe(this) {
             adapter.setItems(it)
         }
 
-        val accStatus = TruemetricsSDK.getSensorStatus(SensorName.ACCELEROMETER)
-        when(accStatus) {
-            SensorStatus.ON -> {
-                binding.sensorAccelerometer.text = "Accelerometer: ON"
-                binding.sensorAccelerometer.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                binding.sensorAccelerometer.text = "Accelerometer: OFF"
-            }
-            SensorStatus.NA -> {
-                binding.sensorAccelerometer.text = "Accelerometer: N/A"
-                binding.sensorAccelerometer.setTextColor(Color.parseColor("#E53935"))
+        viewModel.dbSize.observe(this) {
+            binding.dbSize.text = "DB size: $it"
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.freeStorage.collectLatest {
+                    binding.freeStorage.text = "Free storage: $it"
+                }
             }
         }
 
-        val magStatus = TruemetricsSDK.getSensorStatus(SensorName.MAGNETOMETER)
-        when(magStatus) {
-            SensorStatus.ON -> {
-                binding.sensorMagnetometer.text = "Magnetometer: ON"
-                binding.sensorMagnetometer.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                binding.sensorMagnetometer.text = "Magnetometer: OFF"
-            }
-            SensorStatus.NA -> {
-                binding.sensorMagnetometer.text = "Magnetometer: N/A"
-                binding.sensorMagnetometer.setTextColor(Color.parseColor("#E53935"))
-            }
-        }
+        updateSensorStatus(SensorName.ACCELEROMETER, binding.sensorAccelerometer)
+        updateSensorStatus(SensorName.MAGNETOMETER, binding.sensorMagnetometer)
+        updateSensorStatus(SensorName.BAROMETER, binding.sensorBarometer)
+        updateSensorStatus(SensorName.GYROSCOPE, binding.sensorGyroscope)
+        updateSensorStatus(SensorName.LOCATION, binding.sensorLocation)
+        updateSensorStatus(SensorName.GNSS, binding.sensorGnss)
+        updateSensorStatus(SensorName.STEP_COUNTER, binding.sensorStepCounter)
+        updateSensorStatus(SensorName.MOTION_MODE, binding.sensorMotion)
+        updateSensorStatus(SensorName.WIFI_SIGNAL, binding.sensorWifi)
+        updateSensorStatus(SensorName.MOBILE_DATA_SIGNAL, binding.sensorMobileData)
+        updateSensorStatus(SensorName.RAW_LOCATION, binding.sensorRawLocation)
+    }
 
-        val barStatus = TruemetricsSDK.getSensorStatus(SensorName.BAROMETER)
-        when(barStatus) {
+    private fun updateSensorStatus(sensorName: SensorName, sensorLabel: TextView) {
+        val status = TruemetricsSDK.getSensorStatus(sensorName)
+        when(status) {
             SensorStatus.ON -> {
-                binding.sensorBarometer.text = "Barometer: ON"
-                binding.sensorBarometer.setTextColor(Color.parseColor("#43A047"))
+                sensorLabel.text = "$sensorName: ON"
+                sensorLabel.setTextColor(Color.parseColor("#43A047"))
             }
             SensorStatus.OFF -> {
-                binding.sensorBarometer.text = "Barometer: OFF"
+                sensorLabel.text = "$sensorName: OFF"
             }
             SensorStatus.NA -> {
-                binding.sensorBarometer.text = "Barometer: N/A"
-                binding.sensorBarometer.setTextColor(Color.parseColor("#E53935"))
-            }
-        }
-
-        val gyrStatus = TruemetricsSDK.getSensorStatus(SensorName.GYROSCOPE)
-        when(gyrStatus) {
-            SensorStatus.ON -> {
-                binding.sensorGyroscope.text = "Gyroscope: ON"
-                binding.sensorGyroscope.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                binding.sensorGyroscope.text = "Gyroscope: OFF"
-            }
-            SensorStatus.NA -> {
-                binding.sensorGyroscope.text = "Gyroscope: N/A"
-                binding.sensorGyroscope.setTextColor(Color.parseColor("#E53935"))
-            }
-        }
-
-        val locStatus = TruemetricsSDK.getSensorStatus(SensorName.LOCATION)
-        when(locStatus) {
-            SensorStatus.ON -> {
-                binding.sensorLocation.text = "Location: ON"
-                binding.sensorLocation.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                binding.sensorLocation.text = "Location: OFF"
-            }
-            SensorStatus.NA -> {
-                binding.sensorLocation.text = "Location: N/A"
-                binding.sensorLocation.setTextColor(Color.parseColor("#E53935"))
-            }
-        }
-
-        val gnssStatus = TruemetricsSDK.getSensorStatus(SensorName.GNSS)
-        when(gnssStatus) {
-            SensorStatus.ON -> {
-                binding.sensorGnss.text = "GNSS: ON"
-                binding.sensorGnss.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                binding.sensorGnss.text = "GNSS: OFF"
-            }
-            SensorStatus.NA -> {
-                binding.sensorGnss.text = "GNSS: N/A"
-                binding.sensorGnss.setTextColor(Color.parseColor("#E53935"))
+                sensorLabel.text = "$sensorName: N/A"
+                sensorLabel.setTextColor(Color.parseColor("#E53935"))
             }
         }
     }

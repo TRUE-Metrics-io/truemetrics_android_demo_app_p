@@ -8,6 +8,7 @@ import io.truemetrics.truemetricssdk.LogListener
 import io.truemetrics.truemetricssdk.LogMessage
 import io.truemetrics.truemetricssdk.TruemetricsSDK
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class DebugViewModel : ViewModel() {
@@ -18,10 +19,16 @@ class DebugViewModel : ViewModel() {
     private val mutableLogMessages: MutableLiveData<List<LogMessage>> = MutableLiveData()
     val logMessages: LiveData<List<LogMessage>> = mutableLogMessages
 
+    private val mutableDbSize: MutableLiveData<String> = MutableLiveData()
+    val dbSize: LiveData<String> = mutableDbSize
+
+    val freeStorage = TruemetricsSDK.getStorageInfo()
+
     init {
         viewModelScope.launch {
-            while (true) {
+            while (isActive) {
                 mutableRecordingsCount.postValue(TruemetricsSDK.getRecordingsCount())
+                mutableDbSize.postValue(TruemetricsSDK.getDbSize())
                 delay(1000)
             }
         }

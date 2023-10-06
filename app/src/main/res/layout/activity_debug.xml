@@ -50,6 +50,24 @@
                 android:layout_height="wrap_content"
                 tools:text="Barometer: ON"/>
 
+            <TextView
+                android:id="@+id/sensor_step_counter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Step counter: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_wifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="WiFi signal: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_raw_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Raw location: ON"/>
+
         </LinearLayout>
 
         <LinearLayout
@@ -76,17 +94,61 @@
                 android:layout_height="wrap_content"
                 tools:text="GNSS: ON"/>
 
+            <TextView
+                android:id="@+id/sensor_motion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Motion mode: ON"/>
+
+            <TextView
+                android:id="@+id/sensor_mobile_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Mobile data signal: ON"/>
+
         </LinearLayout>
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/recordings_in_db"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginBottom="10dp"
-        tools:text="Recordings in DB: "/>
+        android:orientation="horizontal"
+        android:layout_marginHorizontal="10dp">
+
+        <TextView
+            android:id="@+id/recordings_in_db"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            tools:text="Recordings in DB: "/>
+
+        <TextView
+            android:id="@+id/db_size"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            tools:text="DB size: "/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginHorizontal="10dp">
+
+        <TextView
+            android:id="@+id/free_storage"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            tools:text="Free storage: "/>
+
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"

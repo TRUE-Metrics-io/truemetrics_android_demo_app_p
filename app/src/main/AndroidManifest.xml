@@ -26,6 +26,10 @@
         <activity android:name="io.truemetrics.demo.DebugActivity" />
         <activity android:name="io.truemetrics.demo.ConfigActivity" />
 
+        <activity
+            android:name="io.truemetrics.demo.LogMetadataActivity"
+            android:configChanges="orientation"/>
+
     </application>
 
 </manifest>
