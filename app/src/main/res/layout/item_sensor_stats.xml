@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="8dp">
+
+    <TextView
+        android:id="@+id/sensor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.5"
+        android:maxLines="1"
+        android:ellipsize="marquee"
+        tools:text="Sensor"/>
+
+    <TextView
+        android:id="@+id/rx"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:text="9999"
+        android:layout_marginLeft="3dp"/>
+
+    <TextView
+        android:id="@+id/tx"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:text="8888"
+        android:layout_marginLeft="3dp"/>
+
+    <TextView
+        android:id="@+id/delta"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:text="1111"
+        android:layout_marginLeft="3dp"/>
+
+</LinearLayout>
