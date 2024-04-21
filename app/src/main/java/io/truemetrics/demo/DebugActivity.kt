@@ -1,9 +1,11 @@
 package io.truemetrics.demo
 
-import android.graphics.Color
+import android.app.ProgressDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -15,15 +17,29 @@ import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import io.truemetrics.demo.databinding.ActivityDebugBinding
-import io.truemetrics.truemetricssdk.TruemetricsSDK
-import io.truemetrics.truemetricssdk.engine.sensor.model.SensorName
-import io.truemetrics.truemetricssdk.engine.sensor.model.SensorStatus
+import io.truemetrics.demo.sensors.SensorsActivity
+import io.truemetrics.truemetricssdk.logger.FileLogger
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class DebugActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "DebugActivity"
+    }
+
     private val viewModel: DebugViewModel by viewModels()
+
+    private var progressDialog: ProgressDialog? = null
+
+    private val exportDatabase = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) {
+        Log.d(TAG, "exportDatabase target Uri: $it")
+        if(it != null) {
+            viewModel.saveDbToExternalStorage(this, it)
+        } else {
+            Toast.makeText(this, getString(R.string.couldnt_create_file), Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +52,15 @@ class DebugActivity : AppCompatActivity() {
         var canScrollVertically = false
 
         binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.export_logs -> exportLogs()
+                R.id.export_db -> exportDatabase.launch("Truemetrics_recordings_db.zip")
+                R.id.sensors -> startActivity(Intent(this, SensorsActivity::class.java))
+            }
+            true
+        }
+
         binding.scrollToBottom.isVisible = false
         binding.scrollToBottom.setOnClickListener {
             binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
@@ -48,7 +73,7 @@ class DebugActivity : AppCompatActivity() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 Log.d("DebugActivity", "onItemRangeInserted = $canScrollVertically")
 
-                if(!canScrollVertically) {
+                if (!canScrollVertically) {
                     binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
                 }
             }
@@ -56,7 +81,7 @@ class DebugActivity : AppCompatActivity() {
 
         binding.recyclerView.addOnScrollListener(object : OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                if(newState == SCROLL_STATE_IDLE) {
+                if (newState == SCROLL_STATE_IDLE) {
                     canScrollVertically = recyclerView.canScrollVertically(1)
                     Log.d("DebugActivity", "canScrollVertically = $canScrollVertically")
                     binding.scrollToBottom.isVisible = canScrollVertically
@@ -65,7 +90,7 @@ class DebugActivity : AppCompatActivity() {
         })
 
         viewModel.recordingsCount.observe(this) {
-            binding.recordingsInDb.text = "DB rows: $it"
+            binding.recordingsInDb.text = it.toString()
         }
 
         viewModel.logMessages.observe(this) {
@@ -73,43 +98,52 @@ class DebugActivity : AppCompatActivity() {
         }
 
         viewModel.dbSize.observe(this) {
-            binding.dbSize.text = "DB size: $it"
+            binding.dbSize.text = it
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.freeStorage.collectLatest {
-                    binding.freeStorage.text = "Free storage: $it"
+                    binding.freeStorage.text = it
                 }
             }
         }
 
-        updateSensorStatus(SensorName.ACCELEROMETER, binding.sensorAccelerometer)
-        updateSensorStatus(SensorName.MAGNETOMETER, binding.sensorMagnetometer)
-        updateSensorStatus(SensorName.BAROMETER, binding.sensorBarometer)
-        updateSensorStatus(SensorName.GYROSCOPE, binding.sensorGyroscope)
-        updateSensorStatus(SensorName.LOCATION, binding.sensorLocation)
-        updateSensorStatus(SensorName.GNSS, binding.sensorGnss)
-        updateSensorStatus(SensorName.STEP_COUNTER, binding.sensorStepCounter)
-        updateSensorStatus(SensorName.MOTION_MODE, binding.sensorMotion)
-        updateSensorStatus(SensorName.WIFI_SIGNAL, binding.sensorWifi)
-        updateSensorStatus(SensorName.MOBILE_DATA_SIGNAL, binding.sensorMobileData)
-        updateSensorStatus(SensorName.RAW_LOCATION, binding.sensorRawLocation)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+
+                viewModel.dbExportResult.collectLatest {
+                    Log.d(TAG, "fileSaveResult: $it")
+                    when(it) {
+                        FileOpStatus.Started -> {
+                            progressDialog = ProgressDialog(this@DebugActivity).also { pd ->
+                                pd.setCancelable(false)
+                                pd.setMessage(getString(R.string.exporting_databse))
+                                pd.show()
+                            }
+                        }
+                        FileOpStatus.Finished -> {
+                            Toast.makeText(this@DebugActivity, getString(R.string.database_exported), Toast.LENGTH_SHORT).show()
+                            progressDialog?.cancel()
+                        }
+                        is FileOpStatus.Error -> {
+                            Toast.makeText(this@DebugActivity, it.message, Toast.LENGTH_SHORT).show()
+                            progressDialog?.cancel()
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private fun updateSensorStatus(sensorName: SensorName, sensorLabel: TextView) {
-        val status = TruemetricsSDK.getSensorStatus(sensorName)
-        when(status) {
-            SensorStatus.ON -> {
-                sensorLabel.text = "$sensorName: ON"
-                sensorLabel.setTextColor(Color.parseColor("#43A047"))
-            }
-            SensorStatus.OFF -> {
-                sensorLabel.text = "$sensorName: OFF"
-            }
-            SensorStatus.NA -> {
-                sensorLabel.text = "$sensorName: N/A"
-                sensorLabel.setTextColor(Color.parseColor("#E53935"))
+    private fun exportLogs(){
+        Intent(Intent.ACTION_SEND).apply {
+            type = "*/email"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("android-sdk-logs@truemetrics.io"))
+            putExtra(Intent.EXTRA_SUBJECT, "Truemetrics SDK ${BuildConfig.VERSION_NAME} logs")
+            putExtra(Intent.EXTRA_STREAM, FileLogger.getShareableLogsZipFile())
+            if (resolveActivity(packageManager) != null) {
+                startActivity(this)
             }
         }
     }

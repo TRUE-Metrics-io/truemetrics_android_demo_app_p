@@ -14,7 +14,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
+import io.truemetrics.demo.FormattingUtils.formatUtc
 import io.truemetrics.demo.databinding.ActivityMainBinding
+import io.truemetrics.demo.stats.StatsActivity
 import io.truemetrics.truemetricssdk.ErrorCode
 import io.truemetrics.truemetricssdk.StatusListener
 import io.truemetrics.truemetricssdk.TruemetricsSDK
@@ -72,12 +74,10 @@ class MainActivity : AppCompatActivity() {
                     TruemetricsSDK.startRecording()
                 }
                 State.RECORDING_IN_PROGRESS -> {
-                    binding.startTimeLabel.setText(R.string.label_start_time)
-                    binding.startTime.text = TruemetricsSDK.getRecordingStartTime().toString()
+                    binding.startTime.text = TruemetricsSDK.getRecordingStartTime()?.formatUtc()
                 }
                 else -> {
-                    binding.startTimeLabel.text = ""
-                    binding.startTime.text = ""
+                    binding.startTime.text = "--"
                 }
             }
         }
@@ -113,8 +113,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             menu.menu.add(0, 1, 1, "Debug Log")
-            menu.menu.add(0, 2, 2, "Active Configuration")
-            menu.menu.add(0, 3, 3, "Log metadata")
+            menu.menu.add(0, 2, 2, "Sensor stats")
+            menu.menu.add(0, 3, 3, "Active configuration")
+            menu.menu.add(0, 4, 4, "Log metadata")
             menu.setOnMenuItemClickListener {
                 when(it.itemId) {
                     0 -> {
@@ -125,8 +126,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     1 -> startActivity(Intent(this, DebugActivity::class.java))
-                    2 -> startActivity(Intent(this, ConfigActivity::class.java))
-                    3 -> startActivity(Intent(this, LogMetadataActivity::class.java))
+                    2 -> startActivity(Intent(this, StatsActivity::class.java))
+                    3 -> startActivity(Intent(this, ConfigActivity::class.java))
+                    4 -> startActivity(Intent(this, LogMetadataActivity::class.java))
                 }
                 true
             }
@@ -135,6 +137,10 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.time.observe(this) {
             binding.currentTime.text = it
+        }
+
+        viewModel.diffSinceStart.observe(this) {
+            binding.diffTime.text = it
         }
 
         checkApiKeyAndInitSdk()

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Truemetrics Demo App</string>
-    <string name="label_start_time">Start Time</string>
-    <string name="label_current_time">Current Time</string>
+    <string name="label_start_time">Recording Start Time (UTC)</string>
+    <string name="label_current_time">Current Time (UTC)</string>
     <string name="notification_channel_foreground_service">Foreground service</string>
     <string name="notification_foreground_service">Truemetrics SDK foreground service</string>
     <string name="toast_notifications_permission_needed">Post notifications permission is needed</string>
@@ -25,4 +25,17 @@
     <string name="activity_label_log_metadata">Log Metadata</string>
     <string name="button_add_fields">Add more fields</string>
     <string name="button_log_metadata">Log metadata</string>
+    <string name="menu_export_logs">Export logs</string>
+    <string name="activity_label_sensors">Sensors</string>
+    <string name="menu_sensors">Sensors</string>
+    <string name="label_recordings_in_db">Recordings in DB:</string>
+    <string name="label_db_size">DB size:</string>
+    <string name="label_free_storage">Free storage:</string>
+    <string name="label_enable_all_sensors">Enable all sensors</string>
+    <string name="activity_label_stats">Stats</string>
+    <string name="couldnt_create_file">Couldn\'t create file at selected destination</string>
+    <string name="menu_export_db">Export recordings DB</string>
+    <string name="database_exported">Database exported</string>
+    <string name="exporting_databse">Exporting database, please wait...</string>
+    <string name="label_diff_time">Diff since start (sec.)</string>
 </resources>
